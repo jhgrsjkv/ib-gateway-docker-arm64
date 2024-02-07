@@ -8,7 +8,7 @@
 
 FROM ubuntu:22.04 as setup
 
-ENV IB_GATEWAY_VERSION=10.22.1m
+ENV IB_GATEWAY_VERSION=X
 ENV IB_GATEWAY_RELEASE_CHANNEL=latest
 ENV IBC_VERSION=3.15.2
 
@@ -25,11 +25,11 @@ WORKDIR /tmp/setup
 # Install IB Gateway
 # Use this instead of "RUN curl .." to install a local file:
 #COPY ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh .
-RUN curl -sSL https://github.com/UnusualAlpha/ib-gateway-docker/releases/download/ibgateway-${IB_GATEWAY_RELEASE_CHANNEL}%40${IB_GATEWAY_VERSION}/ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh \
+RUN curl -sSL https://download2.interactivebrokers.com/installers/ibgateway/stable-standalone/ibgateway-stable-standalone-linux-x64.sh \
   --output ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
-RUN curl -sSL https://github.com/UnusualAlpha/ib-gateway-docker/releases/download/ibgateway-${IB_GATEWAY_RELEASE_CHANNEL}%40${IB_GATEWAY_VERSION}/ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256 \
-  --output ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256
-RUN sha256sum --check ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256
+#RUN curl -sSL https://github.com/UnusualAlpha/ib-gateway-docker/releases/download/ibgateway-${IB_GATEWAY_RELEASE_CHANNEL}%40${IB_GATEWAY_VERSION}/ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256 \
+#  --output ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256
+#RUN sha256sum --check ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256
 RUN sed -i 's+# INSTALL4J_JAVA_HOME_OVERRIDE=+INSTALL4J_JAVA_HOME_OVERRIDE=/usr/lib/jvm/default-java/+g' ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
 RUN sed -i 's+test_dir=$1+app_java_home=/usr/lib/jvm/default-java/ ; return+g' ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
 RUN sed -i 's/-Djava\.ext\.dirs=/-cp /g' ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
@@ -61,7 +61,7 @@ COPY ./scripts /root/scripts
 
 FROM ubuntu:22.04
 
-ENV IB_GATEWAY_VERSION=10.22.1m
+ENV IB_GATEWAY_VERSION=X
 
 WORKDIR /root
 
