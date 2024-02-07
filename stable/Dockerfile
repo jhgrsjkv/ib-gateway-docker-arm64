@@ -8,7 +8,7 @@
 
 FROM ubuntu:22.04 as setup
 
-ENV IB_GATEWAY_VERSION=10.19.1j
+ENV IB_GATEWAY_VERSION=10.22.1m
 ENV IB_GATEWAY_RELEASE_CHANNEL=stable
 ENV IBC_VERSION=3.15.2
 
@@ -17,7 +17,8 @@ RUN apt-get update -y
 RUN apt-get install --no-install-recommends --yes \
   curl \
   ca-certificates \
-  unzip
+  unzip \
+  default-jre default-jdk
 
 WORKDIR /tmp/setup
 
@@ -29,9 +30,19 @@ RUN curl -sSL https://github.com/UnusualAlpha/ib-gateway-docker/releases/downloa
 RUN curl -sSL https://github.com/UnusualAlpha/ib-gateway-docker/releases/download/ibgateway-${IB_GATEWAY_RELEASE_CHANNEL}%40${IB_GATEWAY_VERSION}/ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256 \
   --output ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256
 RUN sha256sum --check ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh.sha256
+RUN sed -i 's+# INSTALL4J_JAVA_HOME_OVERRIDE=+INSTALL4J_JAVA_HOME_OVERRIDE=/usr/lib/jvm/default-java/+g' ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
+RUN sed -i 's+test_dir=$1+app_java_home=/usr/lib/jvm/default-java/ ; return+g' ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
+RUN sed -i 's/-Djava\.ext\.dirs=/-cp /g' ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
 RUN chmod a+x ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh
 RUN ./ibgateway-${IB_GATEWAY_VERSION}-standalone-linux-x64.sh -q -dir /root/Jts/ibgateway/${IB_GATEWAY_VERSION}
 COPY ./config/ibgateway/jts.ini /root/Jts/jts.ini
+
+RUN sed -i 's+test_dir=$1+app_java_home=/usr/lib/jvm/default-java/ ; return+g' /root/Jts/ibgateway/${IB_GATEWAY_VERSION}/ibgateway
+RUN sed -i 's+test_dir=$1+app_java_home=/usr/lib/jvm/default-java/ ; return+g' /root/Jts/ibgateway/${IB_GATEWAY_VERSION}/uninstall
+RUN sed -i 's+test_dir=$1+app_java_home=/usr/lib/jvm/default-java/ ; return+g' /root/Jts/ibgateway/${IB_GATEWAY_VERSION}/.install4j/restarter
+RUN sed -i 's+# INSTALL4J_JAVA_HOME_OVERRIDE=+INSTALL4J_JAVA_HOME_OVERRIDE=/usr/lib/jvm/default-java/+g' /root/Jts/ibgateway/${IB_GATEWAY_VERSION}/ibgateway
+RUN sed -i 's+# INSTALL4J_JAVA_HOME_OVERRIDE=+INSTALL4J_JAVA_HOME_OVERRIDE=/usr/lib/jvm/default-java/+g' /root/Jts/ibgateway/${IB_GATEWAY_VERSION}/uninstall
+RUN sed -i 's+# INSTALL4J_JAVA_HOME_OVERRIDE=+INSTALL4J_JAVA_HOME_OVERRIDE=/usr/lib/jvm/default-java/+g' /root/Jts/ibgateway/${IB_GATEWAY_VERSION}/.install4j/restarter
 
 # Install IBC
 RUN curl -sSL https://github.com/IbcAlpha/IBC/releases/download/${IBC_VERSION}/IBCLinux-${IBC_VERSION}.zip --output IBCLinux-${IBC_VERSION}.zip
@@ -50,7 +61,7 @@ COPY ./scripts /root/scripts
 
 FROM ubuntu:22.04
 
-ENV IB_GATEWAY_VERSION=10.19.1j
+ENV IB_GATEWAY_VERSION=10.22.1m
 
 WORKDIR /root
 
@@ -65,12 +76,13 @@ RUN apt-get install --no-install-recommends --yes \
   libxi6 \
   libgtk2.0-bin \
   socat \
-  x11vnc
+  x11vnc \
+  default-jre default-jdk
 
 # Copy files
 COPY --from=setup /root/ .
 RUN chmod a+x /root/scripts/*.sh
-COPY --from=setup /usr/local/i4j_jres/ /usr/local/i4j_jres
+#COPY --from=setup /usr/local/i4j_jres/ /usr/local/i4j_jres
 
 # IBC env vars
 ENV TWS_MAJOR_VRSN ${IB_GATEWAY_VERSION}
